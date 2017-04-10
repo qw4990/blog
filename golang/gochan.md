@@ -18,15 +18,13 @@ Receiving from a nil channel blocks forever. A receive operation on a closed cha
 
 A send on a closed channel proceeds by causing a run-time panic. A send on a nil channel blocks forever.
 
-可惜的是只描述了现象, 没说明原因.  
-
+可惜的是只描述了现象, 没说明原因.
 
 我认为上述四种现象的原因, 并不是因为技术问题, 而是设计问题.
 
 本文尝试对这四种现象的原因做一些猜测和分析.
 
-本文分两大部分, 分别探讨closed channel和nil channel.  
-
+本文分两大部分, 分别探讨closed channel和nil channel.
 
 # Closed Channel
 
@@ -63,60 +61,60 @@ select {
 package main
 
 import (
-	"fmt"
-	"time"
+    "fmt"
+    "time"
 )
 
 type receiver struct {
-	name    string
-	ch      chan string
-	chClose chan struct{}
+    name    string
+    ch      chan string
+    chClose chan struct{}
 }
 
 func newReceiver(name string) *receiver {
-	return &receiver{
-		name,
-		make(chan string),
-		make(chan struct{}),
-	}
+    return &receiver{
+        name,
+        make(chan string),
+        make(chan struct{}),
+    }
 }
 
 func (r *receiver) run() {
-	go func() {
-		for {
-			select {
-			case msg := <-r.ch:
-				fmt.Println(r.name+" : ", msg)
-				time.Sleep(time.Millisecond * 20)
-			case <-r.chClose:
-				break
-			}
-		}
-	}()
+    go func() {
+        for {
+            select {
+            case msg := <-r.ch:
+                fmt.Println(r.name+" : ", msg)
+                time.Sleep(time.Millisecond * 20)
+            case <-r.chClose:
+                break
+            }
+        }
+    }()
 }
 
 func (r *receiver) close() {
-	close(r.ch)
-	r.chClose <- struct{}{}
+    close(r.ch)
+    r.chClose <- struct{}{}
 }
 
 func send(cha, chb chan string) {
-	select {
-	case cha <- "xixi":
-	case chb <- "xixi":
-	}
+    select {
+    case cha <- "xixi":
+    case chb <- "xixi":
+    }
 }
 
 func main() {
-	ra := newReceiver("aaa")
-	rb := newReceiver("bbb")
-	ra.run()
-	rb.run()
+    ra := newReceiver("aaa")
+    rb := newReceiver("bbb")
+    ra.run()
+    rb.run()
 
-	ra.close()
-	send(ra.ch, rb.ch)
-	send(ra.ch, rb.ch)
-	time.Sleep(time.Second)
+    ra.close()
+    send(ra.ch, rb.ch)
+    send(ra.ch, rb.ch)
+    time.Sleep(time.Second)
 }
 ```
 
@@ -136,8 +134,7 @@ chan \[\]byte, 返回nil;
 
 chan int, 返回0;
 
-chan string, 返回"";  
-
+chan string, 返回"";
 
 和panic比起来, 这个操作结果, 显得非常"不自然".
 
@@ -147,15 +144,14 @@ chan string, 返回"";
 
 那么当A决定退出时, 怎么告诉B, C自己不想要数据了?
 
-首先B和C对A发送数据, 一般是有一段类似于下面的gorouting:  
-
+首先B和C对A发送数据, 一般是有一段类似于下面的gorouting:
 
 ```
 for {
-	select {
-	case chA <- msg:
-	default:
-	}
+    select {
+    case chA <- msg:
+    default:
+    }
 }
 ```
 
@@ -165,17 +161,16 @@ for {
 
 让B和C分别提供一个channel给A, 当A结束时, A向这些channel内发送信号;
 
-于是, B和C的程序会变成这样:  
-
+于是, B和C的程序会变成这样:
 
 ```
 for {
-	select {
-	case chA <- msg:
+    select {
+    case chA <- msg:
     case <-closeA:
         break
-	default:
-	}
+    default:
+    }
 }
 ```
 
@@ -198,12 +193,12 @@ for {
 ```
 ================goroutine1================
 for {
-	select {
-	case chA <- msg:
+    select {
+    case chA <- msg:
     case <-closeA:
         break
-	default:
-	}
+    default:
+    }
 }
 ================goroutine2================
 AClosed := A.AClosed
@@ -211,9 +206,9 @@ AClosed.Wait()
 closeA <- struct{}{}
 ```
 
-goroutine1和之前一样, 用来向A发数据, 并检测A是否已经停止, 唯一不一样的是, 之前的closeA是从A中直接获取的. 
+goroutine1和之前一样, 用来向A发数据, 并检测A是否已经停止, 唯一不一样的是, 之前的closeA是从A中直接获取的.
 
-而这里的closeA是B自己维护的. goroutine2利用了Cond提供的广播, 对A进行检测, 并向自己维护的closeA发送信息. 
+而这里的closeA是B自己维护的. goroutine2利用了Cond提供的广播, 对A进行检测, 并向自己维护的closeA发送信息.
 
 当A结束时, 只需要A.AClosed.Broadcase\(\)即可让B, C都停止.
 
@@ -225,12 +220,12 @@ goroutine1和之前一样, 用来向A发数据, 并检测A是否已经停止, �
 
 ```
 for {
-	select {
-	case chA <- msg:
-	case <-A.AClosed.Wait():
-		break
-	default:
-	}
+    select {
+    case chA <- msg:
+    case <-A.AClosed.Wait():
+        break
+    default:
+    }
 }
 ```
 
@@ -248,19 +243,18 @@ for {
 
 ```
 for {
-	select {
-	case chA <- msg:
-	case <-A.Done:
-		break
-	default:
-	}
+    select {
+    case chA <- msg:
+    case <-A.Done:
+        break
+    default:
+    }
 }
 ```
 
 当A结束时, 直接close\(A.Done\), B和C会收到一个zero type, 然后break.
 
-"广播"的功能得以实现, 且能够配合select直接使用.  
-
+"广播"的功能得以实现, 且能够配合select直接使用.
 
 但是用channel进行"广播", 其缺点也显而易见, 那就是只能广播一次.
 
@@ -283,8 +277,7 @@ select和case的组合实际就是一套"门卫指令" [\(Guarded Command\)](htt
 
 在Hoare的1978年那篇[经典的CSP论文](http://dl.acm.org/citation.cfm?doid=359576.359585)里, 他一开始设计的模型中, 是有"门卫指令"的概念的, 对channel的io操作, 是可以和一些表达式一起使用的.
 
-如你应该可以写类似于下面的代码:  
-
+如你应该可以写类似于下面的代码:
 
 ```
 for {
@@ -313,24 +306,21 @@ A不断的从chA内读取数据, 但是在某种特定条件下, 会设置超时
 
 ```
 for {
-	var timeoutCh <-chan Time
-	if timeoutFlag {
-		timeoutCh = time.After(TIME_OUT)
-	}
-	select {
-	case <-chA:
-	case <-timeoutCh:
-		log("Timeout.")
-	}
+    var timeoutCh <-chan Time
+    if timeoutFlag {
+        timeoutCh = time.After(TIME_OUT)
+    }
+    select {
+    case <-chA:
+    case <-timeoutCh:
+        log("Timeout.")
+    }
 }
 ```
 
-关于"门卫指令"的思路来自[这里的讨论](https://groups.google.com/forum/#!topic/golang-nuts/QltQ0nd9HvE).  
-
+关于"门卫指令"的思路来自[这里的讨论](https://groups.google.com/forum/#!topic/golang-nuts/QltQ0nd9HvE).
 
 好吧, 说实话, 其实对于nil channel的操作, 我更倾向于产生panic, 我感觉产生panic会安全一点.
 
 而上述说的用于一定程度上实现"门卫指令", 能够在某些时候方便写码, 也只是说法之一, 我目前也不是很认同这个说法.
-
-至于真正的原因, 或许得去问问三位设计者大人了, 或许也就只是一个"tea or coffee"的问题而已.
 

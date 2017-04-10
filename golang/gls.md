@@ -121,7 +121,7 @@ GLS实现难点在于, 你无法通过runtime等官方库, 拿到当前goroutine
 
 其调用栈大致如下:
 
-![](/golang/gls_assert/import.png)
+![](/golang/gls_assets/import0.png)
 
 现在， 我们实现一个函数， CodeGIDToStack\(task\);
 
@@ -139,25 +139,115 @@ func stackTag0(t task) { t() }
 func stackTag1(t task) { t() }
 
 func CodeGIDToStack(t task) {
-    gid := GIDCounter
-    GIDCounter++
-    go func() {
-        if gid == 0 {
-            stackTag0(t)
-        } else if gid == 1 {
-            stackTag1(t)
-        } else {
-            panic("gid is too large")
-        }
-    }()
+    gid := GIDCounter
+    GIDCounter++
+    go func() {
+        if gid == 0 {
+            stackTag0(t)
+        } else if gid == 1 {
+            stackTag1(t)
+        } else {
+            panic("gid is too large")
+        }
+    }()
 }
 ```
 
 我们暂且只考虑对0和1进行编码的情况;
 
-当我们调用CodeGIDToStack时, task的栈就变成了下面这样:
+当我们调用CodeGIDToStack时, task的栈就变成了下面这样:![](/golang/gls_assets/import1.png)现在考虑怎么将大于1的GID编码进栈中;
 
-![](/golang/gls_assets/import1.png)
+思路还是比较简单的, 假设我们想编码6;
+
+其二进制表示为110, 则我们设法构成下面的调用栈:![](/golang/gls_assets/import2.png)代码大致如下:
+
+```
+var GIDCounter uint
+
+type task func()
+
+func stackTag0(remains uint, t task) {
+	if remains == 0 {
+		t()
+	} else {
+		if remains&1 == 0 {
+			stackTag0(remains>>1, t)
+		} else {
+			stackTag1(remains>>1, t)
+		}
+	}
+}
+
+func stackTag1(remains uint, t task) {
+	if remains == 0 {
+		t()
+	} else {
+		if remains&1 == 0 {
+			stackTag0(remains>>1, t)
+		} else {
+			stackTag1(remains>>1, t)
+		}
+	}
+}
+
+func CodeGIDToStack(t task) {
+	gid := GIDCounter
+	GIDCounter++
+	go func() {
+		if gid&1 == 0 {
+			stackTag0(gid>>1, t)
+		} else {
+			stackTag1(gid>>1, t)
+		}
+	}()
+}
+```
+
+### 具体实现
+
+上小结描述了编码GID到调用栈的思路;
+
+至于怎么利用调用栈还原, 利用runtime的哪些接口, 和其他一些优化;
+
+请直接参考开头提供的两份代码库.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

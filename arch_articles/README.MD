@@ -1,3 +1,6 @@
+# 文章
+该目录用于记录一些靠谱的架构文章;
+
 # ID生成器
 [Leaf——美团点评分布式ID生成系统](http://tech.meituan.com/MT_Leaf.html)
 

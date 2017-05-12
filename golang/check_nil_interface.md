@@ -1,4 +1,4 @@
-# nil interface
+# nil interface检测问题
 在golang中, 对interface进行是否为nil的检测, 有时候是不可靠的;
 
 直接先下面这个例子;

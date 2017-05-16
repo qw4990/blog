@@ -8,3 +8,10 @@
 
 # Serverless
 [Serverless，后端小程序的未来](http://www.tuicool.com/articles/ymQr2mu)
+
+# 分布式锁
+[利用redis实现分布式锁](https://redis.io/topics/distlock)
+
+上述分布式锁的实现方式会因为一些时钟错乱失效, 这篇文章说明了原因: [how-to-do-distributed-locking](https://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html)
+
+

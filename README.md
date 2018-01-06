@@ -16,7 +16,7 @@
 
 [check nil interface](/golang/nilinterface/README.md)
 
-
+[golang一些吐槽](/golang/badpoints/README.md)
 
 # database
 

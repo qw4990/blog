@@ -1,5 +1,7 @@
 # algorithm
 
+[hash复杂度计算demo](/algorithm/hash_complexity_demo/README.md)
+
 # bigdata
 
 # cloud&os

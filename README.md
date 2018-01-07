@@ -16,7 +16,7 @@
 
 [check nil interface](/golang/nilinterface/README.md)
 
-[copy checker](/golang/copychecker/README.md)
+[struct copy checker](/golang/copychecker/README.md)
 
 [golang一些吐槽](/golang/badpoints/README.md)
 

@@ -20,7 +20,7 @@
 
 [golang scheduler demo1](/golang/scheduler_demo1/README.md)
 
-[golang一些吐槽](/golang/badpoints/README.md)
+[golang sucks](/golang/golangsucks/README.md)
 
 # database
 
@@ -29,4 +29,14 @@
 # others
 
 [一些不错的文章](/others/README.md)
+
+# TODOs
+
+boltDB
+
+自己动手写docker
+
+mesos
+
+spark
 

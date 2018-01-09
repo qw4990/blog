@@ -22,6 +22,8 @@
 
 [golang sucks](/golang/golangsucks/README.md)
 
+[golang 依赖注入](https://zhuanlan.zhihu.com/p/32689810)
+
 ## java
 
 [java/javac/jar 简单用法](/java/java_javac_jar/README.md)

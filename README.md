@@ -40,6 +40,8 @@
 
 # TODOs
 
+minix
+
 boltDB
 
 自己动手写docker
@@ -49,4 +51,6 @@ mesos
 spark
 
 jvm
+
+golang runtime/ticker
 

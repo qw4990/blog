@@ -98,11 +98,11 @@ leaf node: [(key1, val1)|(key2, val2)|(key3, val3)...]
 
 同理, 直接存储数据内容.
 
+-
 
+根节点的root\_pgid存储在META\_PAGE中;
 
-根节点d 
-
-
+这样, 在需要的时候, 读入特定的页, 能够很方便的对B+树进行遍历.
 
 #### CopyOnWrite解决读写冲突
 
@@ -113,8 +113,6 @@ leaf node: [(key1, val1)|(key2, val2)|(key3, val3)...]
 BoltDB使用了CopyOnWrite的方法, 对需要修改节点单保存一份;
 
 当事务进行提交时, 将这些缓存的数据, 全部同步到磁盘;
-
-
 
 下面用几个图来表示整个过程;
 

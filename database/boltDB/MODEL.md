@@ -68,9 +68,7 @@ mem:  [MP1|MP2|DP1|DP2|...|DPi-1|FP|DPi|DPi+1|...]
 disk: [MP1|MP2|DP1|DP2|...|DPi-1|FP|DPi|DPi+1|...]
 ```
 
-从而省略了自己实现PageCacher的麻烦;
-
-在之后的所有描述中, 除非特别说明, 否则所指的页, 都指的是内存中的页;
+从而省略了自己实现PageCacher的麻烦, 具体见"实现"篇;
 
 ## B+树索引
 

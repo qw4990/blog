@@ -164,11 +164,7 @@ BoltDB的整个持久化是从下向上的;
 
 另外, 被修改的节点, 持久化时, 所使用的页号会发生改变, 所以其父节点也会受到影响, 该影响一直持续到根;
 
-#### 6. 为B+树申请分页
-
-假设需要为每个被改变的节点申请页, 来用于持久化;
-
-该过程同时影响freelist, 对freelist的改变暂时维护在内存中:![](/database/boltDB/pics/bolt5.png)![](/database/boltDB/pics/bolt6.png)
+#### 6. 为B+树申请分页![](/database/boltDB/pics/bolt5.png)![](/database/boltDB/pics/bolt6.png)
 
 因为中间两个节点的页号发生了改变, 所以其父亲节点的索引页需要更新, 于是他们的父亲节点也需要改动;
 

@@ -17,7 +17,7 @@ disk: [P1|P2|P3|P4|...|Pn]
 这些页, 可分为三种类型:
 
 1. META\_PAGE: 存储元信息;
-2. FREELIST\_PAGE: 用来管理所有的DATA\_PAGE;
+2. FREELIST\_PAGE: 标记某个页是否处于free状态, 用来管理所有的DATA\_PAGE;
 3. DATA\_PAGE: 存储实际的数据;
 
 下面稍微详细点的介绍这几种页;

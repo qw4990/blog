@@ -26,7 +26,7 @@ disk: [P1|P2|P3|P4|...|Pn]
 
 P1和P2都是META\_PAGE, 且相互独立;
 
-设置两个META\_PAGE的原因是用于备份, 后面会将;
+设置两个META\_PAGE的原因是用于备份, 后面会说;
 
 下面介绍MEGA\_PAGE中一些关键字段, 并可以从中看出BoltDB的一些机制;
 

@@ -124,19 +124,19 @@ BoltDB使用了CopyOnWrite的方法, 对需要修改节点单保存一份;
 
 蓝色代表数据干净, 还未被修改;
 
-B+树节点中的数字为其占用的页号, 如根节点的4表示根节点的内容存储在4页开始的一些页中;
+B+树节点中的数字为其占用的页号, 如根节点的4表示根节点的内容存储在4页开始的一些页中;![](/database/boltDB/pics/bolt0.png)
 
 #### 1. 修改/添加
 
 某个事务调用修改/添加操作, 修改了某个叶节点的内容;
 
-BoltDB将改叶节点的内容copy一份出来, 缓存在内存中, 如下图红色部分;
+BoltDB将改叶节点的内容copy一份出来, 缓存在内存中, 如下图红色部分;![](/database/boltDB/pics/bolt1.png)
 
 #### 2. 删除
 
 该事务调用了删除操作, 于是影响了某个叶节点内的内容;
 
-同理, 拷贝出一份维护在内存中;
+同理, 拷贝出一份维护在内存中;![](/database/boltDB/pics/bolt2.png)
 
 #### 3. Rebalance-Split
 
@@ -144,13 +144,13 @@ BoltDB将改叶节点的内容copy一份出来, 缓存在内存中, 如下图红
 
 如果某个节点内容过多, B+树会对他进行分裂, 分裂后, 会影响到父节点;
 
-假设下面的这个节点进行了分裂, 则会形成如下图:
+假设下面的这个节点进行了分裂, 则会形成如下图:![](/database/boltDB/pics/bolt3.png)
 
 #### 4. Rebalance-Merge
 
 B+树的另一个性质是如果某个节点内容过少, 会和兄弟节点进行合并, 这也会影响到父节点;
 
-假设下面这个节点进行了合并, 则形成如下图:
+假设下面这个节点进行了合并, 则形成如下图:![](/database/boltDB/pics/bolt4.png)
 
 #### 5. 持久化简介
 
@@ -164,41 +164,31 @@ BoltDB的整个持久化是从下向上的;
 
 另外, 被修改的节点, 持久化时, 所使用的页号会发生改变, 所以其父节点也会受到影响, 该影响一直持续到根;
 
-#### 6. 持久化B+树
+#### 6. 为B+树申请分页
 
-假设先持久化右边这个分支;
+假设需要为每个被改变的节点申请页, 来用于持久化;
 
-首先为叶节点申请页用于存储;
+该过程同时影响freelist, 对freelist的改变暂时维护在内存中:![](/database/boltDB/pics/bolt5.png)![](/database/boltDB/pics/bolt6.png)
 
-该过程同时影响freelist, 对freelist的改变暂时维护在内存中:
+因为中间两个节点的页号发生了改变, 所以其父亲节点的索引页需要更新, 于是他们的父亲节点也需要改动;
 
-===
+![](/database/boltDB/pics/bolt7.png)![](/database/boltDB/pics/bolt8.png)
 
-然后同理持久化中间这个分支节点:
+#### 7. 为freelist申请分页
 
-===
+回收老freelist所使用的页, 为新freelist申请分页:![](/database/boltDB/pics/bolt10.png)
 
-由于中间这个分支节点被重新分配了页号, 根节点原来指向他的pgid就失效了, 于是根节点收到了影响;
+#### 8. 更新META\_PAGE
 
-===
+由于根节点和freelist的页号发生了改变, META PAGE也会被改变, 改变先缓存在内存中;![](/database/boltDB/pics/bolt11.png)
 
-接下来持久化右边这个分支, 同理, 最后结果如下:
+#### 9. 持久化B+树节点
 
-===
+接下来真正的持久化B+树节点;
 
-最后持久化根节点:
+#### ![](/database/boltDB/pics/bolt12.png)![](/database/boltDB/pics/bolt13.png)10. 持久化freelist![](/database/boltDB/pics/bolt14.png)
 
-===
-
-根节点被持久化后, META\_PAGE中的指针就失效了, 于是需要更新, 这个更新同样暂时缓存在内存中:
-
-===
-
-#### 7. 持久化freelist
-
-回收老freelist所使用的页, 持久化新freelist, 修改META\_PAGE:
-
-#### 8. 持久化META\_PAGE
+#### 11. 更新META PAGE到磁盘![](/database/boltDB/pics/bolt15.png)12. 最后结果![](/database/boltDB/pics/bolt16.png)
 
 ## 容错分析及改进
 
@@ -206,9 +196,9 @@ BoltDB的整个持久化是从下向上的;
 
 接下来分析对事务的容错性;
 
-1. 在1-4失败: 所有修改都在内存中, 对数据库文件毫无影响;
-2. 在5-7失败: META\_PAGE还没有持久化, 重启后, 之前的dirty page不会对数据库目前的状态产生影响;
-3. 在8失败: 使用META\_PAGE中的checksum进行校验, 如果失败, 则数据库不可用\(具体见下文Backup\);
+1. 在1-8失败: 所有修改都在内存中, 对数据库文件毫无影响;
+2. 在9-10失败: META\_PAGE还没有持久化, 重启后, 之前的dirty page不会对数据库目前的状态产生影响;
+3. 在11失败: 使用META\_PAGE中的checksum进行校验, 如果失败, 则数据库不可用\(具体见下文Backup\);
 
 #### Backup
 

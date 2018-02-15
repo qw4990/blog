@@ -52,7 +52,7 @@ FREELIST\_PAGE用来持久化这个数据;
 disk: [MP1|MP2|DP1|DP2|...|DPi-1|FP|DPi|DPi+1|...]
 ```
 
-任何页都有可能作为FP使用, 在MP中记录了FP当前的位置;
+任何页都有可能作为FREELIST PAGE使用, 在META PAGE中的freelist\_pgid记录了它当前的位置;
 
 #### 分页的读入和缓存
 

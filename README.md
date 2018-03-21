@@ -40,9 +40,11 @@
 
 # TODOs
 
-minix
+druid
 
-boltDB
+cpp memory order
+
+minix
 
 levelDB
 

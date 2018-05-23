@@ -79,7 +79,7 @@ cal最右边的"$0-32", 分别表示他需要的栈空间大小和入参空间�
 
 接下来依次把BP, 11, 12放到如下图的位置;
 
-()[./pics/main_stack1.jpeg]
+![](./pics/main_stack1.jpeg)
 
 <b>NOTE: 其中BP是frame pointer, 记录的是此函数被调用时, 栈开始的位置, 因为不是重点就不延伸讲解, 具体可看: https://en.wikipedia.org/wiki/Call_stack;</b>
 

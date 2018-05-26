@@ -162,7 +162,9 @@ func schedinit() {
 ```
 DATA	runtime·mainPC+0(SB)/8,$runtime·main(SB)
 ```
-编译器会把main的地址, 写入到这个变量内;
+编译器会把runtime.main方法的地址, 写入到这个变量内;
+
+runtime.main被定义在proc.go中, 在runtime.main中, 会做一些初始化, 然后调用用户的main;
 
 上面逻辑中, 先把main的地址和main的参数大小入栈, 然后再调用runtime.newproc;
 

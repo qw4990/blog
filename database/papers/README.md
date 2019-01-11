@@ -30,4 +30,14 @@ Section 4简述了X100架构
 1. 在MIL的基础上, 增加了selection-vector, 减少物化
 2. 针对agg/join等算子进行了优化
 
-Section 5待看...
+Section 5比较了vector size的影响
+1. size为1时, 相当于按行处理, 性能最差
+2. size约等于L1和L2 Cache和时, 性能最好
+3. size超过L1+L2时, 性能逐渐下降
+
+其他:
+物化这个概念比较有意思, 任何关于数据的拷贝都可以算作是物化
+1. 数据从Disk读到Mem可以算作一次物化
+2. MIL处理vector时的中间结果, 也可以当做在内存上进行了一次物化
+3. Cache满时, 回写Mem, 也可看做物化
+

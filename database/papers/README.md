@@ -83,6 +83,7 @@ parser首先query转化为logical tree, 然后提供给optimizer进行优化, �
 Section 3 阐述了整个搜寻最优解的过程.
 类似于记忆化搜索, 输入为: (LogicalExpr, PhysProp, Limit), 表示搜寻改LogicalExpr在PhysProp限制下, cost不超过Limit的最优解.
 搜寻过程大致为, 不断的利用 transformation rule和implemention rule和enforcer 扩展搜索空间并找到最优解.
+transformation rule和implemention rule都是针对局部的转化, 对于一些比较全局的规则, 比如 predicates pushdown, 可以在执行搜索前, 执行一个preprocess的过程进行处理.
 
 
 ### Orca: A Modular Query Optimizer Architecture for Big Data
@@ -97,7 +98,13 @@ Section 4.1 讲搜寻最优解的过程, 主要有这几个阶段:
 2. Statistics Derivation: 导出统计信息, 必要时会通过DXL从Database上获取必要信息.
 3. Implemention: 根据规则导出group expression的实现, 如从InnerJoin导出InnerNLJoin/InnerHashJoin.
 4. Optimization: 在搜寻空间中查找最优解, 类似于一个记忆化搜索的过程.
-搜寻过程中需要考虑property, 具体比较细节, 可看论文原文图示.
+
+上述规则大概可以分为三种类型:
+1. transformation rules: logical -> logical.
+2. implemention rules: logical -> physical.
+3. enforce rule: deal with enforced property.
+
+由于上述规则一般都是针对局部的优化, 对于一些比较全局的规则, 比如 predicates pushdown, 可以在执行搜索前, 执行一个preprocess的过程进行处理.
 
 Section 4.2 讲并发的在搜寻空间中搜索, 较为简单.
 

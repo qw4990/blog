@@ -112,3 +112,34 @@ Section 6.1 提到一个用来复现bug的工具 AMPERe.
 
 Section 6.2 提到一个用来调整cost model的工具 TAQO.
 
+
+### Efficiently Compiling Efficient Query Plans for Modern Hardware
+Section 1 讲了传统iterator(Volcano) model的缺点:
+1. 一次只能处理一个tuple.
+2. 通常用函数指针等方式实现, 效率比较差.
+3. 额外的状态记录开销, 比如TableScan, 需要记录当前位置等状态.
+
+通过batch的方式可以提高改模型的效率, 但是会导致另外一个问题.
+Batch后会破坏pipeline的性质.
+pipeline性质通常指的是不用拷贝的直接将数据传递给父节点.
+在本文更为严格, 指的是数据不能出寄存器, 其实也就是在寄存器和内存间拷贝数据.
+因为batch后, 通常数据量会变大, 寄存器不能存下.
+
+Section 3 提出了新的模型
+首先严格的定义了pipeline性质, 希望被处理的数据, 尽量留在寄存器中, 把多个算子的逻辑一起处理完后再拿出来.
+作者认为所有 iterator-style + pull 的模式都会增加破坏pipeline性质的风险, 因此把数据流的方式从pull变成了push.
+
+为此, 为每个算子提供了两个接口抽象:
+1. produce(): 通知这个算子可以开始生产数据了.
+2. consume(attributes, source): 供儿子节点调用, 用于让儿子把他数据push给父亲.
+
+上述两个接口只是在代码生成时使用, 生成为实际的机器码后, 这个结构将不复存在, 变为更加紧致的整体.
+
+Section 4 讲了生成机器码的方式
+一开始想生成C++的手写代码, 但是编译太慢, 复杂的query编译可能就需要几秒钟.
+后面改成了C++和LLVM协同的方式.
+
+Section 5 讲了怎么并发
+没看
+
+

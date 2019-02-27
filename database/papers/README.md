@@ -143,3 +143,18 @@ Section 5 讲了怎么并发
 没看
 
 
+### Large-scale Incremental Processing Using Distributed Transactions and Notifications
+Section 1 交代了一些背景
+
+Section 2.1 因为Percolator建立在Bigtable上, 这一节交代了Bigtable提供的接口.
+主要其实就是自带时间戳和行级事务.
+
+Section 2.2 讲解了跨行事务的实现.
+整体方法还是2PC, 特色是利用了Bigtable的单行事务, 具体的细节就不描述了, 简单说明下该方法的可行性:
+1. 如果事务在primary行提交前或primary行提交时失败: 那么所有行的write列还未改变, 读取时会直接读事务之前最新的版本数据, 相当于该事务对数据无任何影响.
+2. 如果在primary行提交成功后, secondaries提交失败: primary已经成功则无任何影响, secondaries处于未完成状态, 当某个事务读取secondaries数据时, 发现其处于未完成状态, 则去检测它对于的primary的状态, 便可以区分它之前所处的事务是成功还是失败, 然后进行相对应的清理操作, rollforward或者rollback.
+相当于整个事务的成功和失败状态由primary保证, 而primary的一致性由Bigtable自带单行事务保证, secondaries的一致性由Percolator上述的lazy cleanup完成.
+两者一起, 则保证了整个事务的可靠性.
+不过如果secondaries在清理状态的时候还失败, 且一直失败...
+
+WIP...

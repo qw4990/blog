@@ -11,6 +11,7 @@
 
 
 ### MonetDB/X100: Hyper-Pipelining Query Execution
+```
 Section 2简述CPU工作原理, 点出对性能影响比较大的几个因素:
 1. cpu cache
 2. branch predict
@@ -19,7 +20,7 @@ Section 2简述CPU工作原理, 点出对性能影响比较大的几个因素:
 1. 30%的指令为内存读写
 2. 内存读写需要几十ns, 需要CPU等待几百个cycle
 
-Section 3分析了TPC-H Q1在Mysql和MIL运行情况
+Section 3分析了TPC-H Q1在Mysql和MIL运行情况
 在Mysql上面表现不佳原因:
 1. 90%时间都处理都在做一些其他(如行解析)之类的工作
 2. 实际处理时, 每次只处理一行, 不能利用cpu loop pipeline
@@ -40,9 +41,10 @@ Section 5比较了vector size的影响
 1. 数据从Disk读到Mem可以算作一次物化
 2. MIL处理vector时的中间结果, 也可以当做在内存上进行了一次物化
 3. Cache满时, 回写Mem, 也可看做物化
-
+```
 
 ### Morsel-Driven Parallelism: A NUMA-Aware Query Evaluation Framework for the Many-Core Age
+```
 介绍了一种在NUMA架构下的执行器框架.
 主要思想为:
 1. 精心设计每个算子的执行逻辑, 让他们都能被拆成多个子任务, 并发的执行, 利用多核的计算资源.
@@ -68,9 +70,10 @@ Section 5和6没细看.
 总体看Morsel-Driven最大优点是把一个大Query拆分成多个子任务, 充分利用超多核的计算资源.
 子任务调度时考虑内存分布对计算进行提速.
 并且调度是在runtime进行, 所以能在运行过程中较为弹性的进行调度, 如某个任务数据较大, 就把他切分细一点, 多分配些计算资源.
-
+```
 
 ### The Volcano Optimizer Generator: Extensibility and Efficient Search
+```
 Section 2 阐述了optimizer的设计目标和输入输出.
 parser首先query转化为logical tree, 然后提供给optimizer进行优化, 产出一个执行计划.
 引入了这么几个概念:
@@ -84,9 +87,11 @@ Section 3 阐述了整个搜寻最优解的过程.
 类似于记忆化搜索, 输入为: (LogicalExpr, PhysProp, Limit), 表示搜寻改LogicalExpr在PhysProp限制下, cost不超过Limit的最优解.
 搜寻过程大致为, 不断的利用 transformation rule和implemention rule和enforcer 扩展搜索空间并找到最优解.
 transformation rule和implemention rule都是针对局部的转化, 对于一些比较全局的规则, 比如 predicates pushdown, 可以在执行搜索前, 执行一个preprocess的过程进行处理.
+```
 
 
 ### Orca: A Modular Query Optimizer Architecture for Big Data
+```
 Section 3 讲整体结构, 由于Orca是独立于Database的单独的优化器, 因此定义了一个DXL语言来交换信息.
 内部结构方面, 较为重要的是memo这个结构, 源自cascade framework.
 1. 每个query都会对应一个memo, memo表示这个query的整个执行计划搜寻空间.
@@ -111,9 +116,11 @@ Section 4.2 讲并发的在搜寻空间中搜索, 较为简单.
 Section 6.1 提到一个用来复现bug的工具 AMPERe.
 
 Section 6.2 提到一个用来调整cost model的工具 TAQO.
+```
 
 
 ### Efficiently Compiling Efficient Query Plans for Modern Hardware
+```
 Section 1 讲了传统iterator(Volcano) model的缺点:
 1. 一次只能处理一个tuple.
 2. 通常用函数指针等方式实现, 效率比较差.
@@ -141,9 +148,10 @@ Section 4 讲了生成机器码的方式
 
 Section 5 讲了怎么并发
 没看
-
+```
 
 ### Large-scale Incremental Processing Using Distributed Transactions and Notifications
+```
 Section 1 交代了一些背景
 
 Section 2.1 因为Percolator建立在Bigtable上, 这一节交代了Bigtable提供的接口.
@@ -161,8 +169,10 @@ Section 2.3 讲了TSO的高吞吐实现.
 也很简单的, 每次申请一个区间, 然后把区间最高值持久化到磁盘.
 处理请求时从则从内存里面已经提前申请好的区间里面分配.
 如果crash了, 则从持久层的上次区间最高值恢复.
+```
 
 ### Linearizability: A Correctness Condition for Concurrent Objects
+```
 Section 1 非正式的, 从直觉上, 介绍了linearizability是什么样的一个模型.
 在物理时间(绝对时间)上, 每个操作都有开始和结束时间, 分别定义为inv和res.
 每个操作的生效时间, 可以是inv到res中的任一时刻.
@@ -211,3 +221,4 @@ nonblocking property: 有点没理解...
 而在Linearizability中就是非法的.
 
 Section 4及后续没看
+```

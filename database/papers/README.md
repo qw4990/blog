@@ -161,3 +161,53 @@ Section 2.3 讲了TSO的高吞吐实现.
 也很简单的, 每次申请一个区间, 然后把区间最高值持久化到磁盘.
 处理请求时从则从内存里面已经提前申请好的区间里面分配.
 如果crash了, 则从持久层的上次区间最高值恢复.
+
+### Linearizability: A Correctness Condition for Concurrent Objects
+Section 1 非正式的, 从直觉上, 介绍了linearizability是什么样的一个模型.
+在物理时间(绝对时间)上, 每个操作都有开始和结束时间, 分别定义为inv和res.
+每个操作的生效时间, 可以是inv到res中的任一时刻.
+
+假设有下面的3个操作者, P1, P2, P3, 分别把x的值设置为1, 把x的值设置为2, 读取x的值.
+
+P1和P2的时间有相交, 比如顺序为inv1, inv2, res1, res2, inv3, res3.
+则P1和P2的生效时间可以任意, 此时P3读取到x为1或者2都是合法的.
+因为可以假设生效顺序为: P1, P2, P3或者P2, P1, P3.
+这个可以当做规则1, 把所有操作转化成了全局的原子操作, 且P的内部顺序得到保证(这点在该例子中没有体现).
+
+如果P1的结束事件在P2开始前, 执行顺序为inv1, res1, inv2, res2, inv3, res3.
+则P1必须先生效, 然后P2生效, 且P3一定看到的值是2.
+此时只能是P1, P2, P3.
+这是规则2, 相当于保留了物理时间下的绝对偏序.
+
+规则1把相交的操作转换为不相交, 得到一个全局的原子操作顺序, 如[inv1, inv2, res1, res2]和[inv1, inv2, res2, res1];
+根据e1和e2的生效时间, 可以转换为[inv1, res1, inv2, res2]或者[inv2, res2, inv1, res1], 分别相当于;
+[x=1, x=2]或者[x=2, x=1]两个写操作原子性的执行.
+当然对于任何的P, 他们内部顺序在全局的顺序中必须得到保持, 比如P4的两个操作为, 读取x, 读取y.
+则在全局视角的操作中, 也必须为P4先读取了x, 再读取y.
+
+规则2则是在1的基础上, 保留了物理时间下的偏序.
+和sequential consistency比较, 相当于多了规则2的限制.
+Spanner论文中提出了external consistency, 其实就是linearizability, 只不过这里的偏序是以物理时间为参照, Spanner中是以TrueTime作为参照.
+
+Section 2 严格的定义了linearizability, 定义过程中引入了一些概念.
+invocation & response: 对应操作的开始和结束, 每个事件还有对应的发起者, 在论文中表示为Processor P, 和操作对象object x.
+History: 由上述两种事件构成的序列.
+Sequential History: 由相邻且对应的inv和res事件构成的history, 如[inv1, res1, inv2, res2]就是sequential的, 而[inv1, inv2, res1, res2]就不是, 该性质相对于可以把每个操作都看做原子性的, 中间没有被其他操作间断.
+Equivalent History: 只要两个History关于每个Processor的子历史H|P相等, 则他们两个相等.
+偏序<H: 对于两个事件e0, e1, 如果res(e0)发生在(物理时间)inv(e1)前, 则e0 <H e1; 该定义表示e0和e1的执行事件没有相交部分, 且e0绝对的发生在e1前.
+
+Linearizable History: 只要能找到一个Sequential History S, 使得H == S, 且H当中的所有偏序关系<H, 在S中都保留, 则H是Linearizable的.
+其中
+两个条件其实就是Section 1中的两个规则.
+
+Section 3 讲了linearizability的一些性质, 以及和其他模型的对比.
+local property: H是linearizable的, 当且仅当对于H中的每个对象x, H|x是linearizable.
+nonblocking property: 有点没理解... 
+
+同Sequential consistency对比: Sequential consistency相当于要求所有Processor有一个全局同一的执行顺序视角就OK, 相当于只有规则1没有规则2.
+比如P1, P2, P3分别设置x为1, 设置x为2, 读取x.
+操作顺序为: [inv1, res1, inv2, res2, inv3, res3].
+如果P3读取到x为1, 在Sequential consistency的定义中也是合法的, 相当于生效顺序为P2, P1, P3.
+而在Linearizability中就是非法的.
+
+Section 4及后续没看

@@ -222,3 +222,27 @@ nonblocking property: 有点没理解...
 
 Section 4及后续没看
 ```
+
+### Spanner: Google’s Globally Distributed Database
+```
+看了Section 1, 2, 3, 4, 其中重点看了事务模型部分, 既Section 3, 4;
+由于分析Spanner的博客太多了, 就不做过度赘述了, 推荐以下两个博客;
+http://loopjump.com/google_spanner/
+https://www.cnblogs.com/foxmailed/p/3867814.html
+
+这里简单概括一下Spanner的事务模型.
+
+Spanner提供的一致性模型为external consistency: 指的是后开始的事务一定能看到已经提交事务的结果.
+实际上这就是linearizability, 只不过在linearizability中的时间标准是real-time(真实物理时间), 而在Spanner中是true-time(记为tt), 既由其原子钟和GPS形成的.
+
+引入原子钟+GPS构成true-time, 就是为了给整个集群提供了一个时间标准, 既如果在某台机器上tt.After(xx)为true, 那么在整个集群上, xx时间点在逻辑上也一定都被认为"已经过去", 既tt.After(xx)也为true.
+
+实现external consistency的核心方法有两步, 1)选择合适的commit时间戳, 记为ts, 2)等到在true-time时间标准上, ts已经"过去"后, 再提交, 也就是tt.After(ts)为true.
+
+PS: 下面所说的所有关于时间的比较, 先后, 大小于, 都是以tt为标准在描述, a在b后发生表示a.After(b)为true.
+
+第一步选择的ts一定要大于事务的开始时间, 另外要大于2PC中所有参与者的prepare时间, 另外还要保证生成的ts一定要比前一个事务的ts大.
+
+第二步保证, 当tt.After(ts)为true后, 一旦事务提交, 它的结果便能对所有节点可见; 因为既然在这台机器上tt.After(ts)为true, 那么在所有简单, tt.After(ts)也一定为true.
+```
+

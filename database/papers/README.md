@@ -95,8 +95,13 @@ transformation rule和implemention rule都是针对局部的转化, 对于一些
 Section 3 讲整体结构, 由于Orca是独立于Database的单独的优化器, 因此定义了一个DXL语言来交换信息.
 内部结构方面, 较为重要的是memo这个结构, 源自cascade framework.
 1. 每个query都会对应一个memo, memo表示这个query的整个执行计划搜寻空间.
-2. memo包含多个group, 多个group之间有依赖关系, 每个group表示一个算子的子搜寻空间, 如InnerJoin.
-3. group包含多个group expression, 表示多种实现算子的方法, 如InnerJoin可能有InnerNLJoin/InnerHashJoin等多种实现方式.
+2. memo包含多个group, 多个group之间有依赖关系, 每个group表示"一部分逻辑的搜索空间", 如"Sel->Scan".
+3. group包含多个group expression, 表示该种group的实现方式, 如"Selection->IndexScan"或者"Selection->TableScan"等.
+
+group可以用来剪枝已经搜索过的逻辑.
+目前的TiDB只能记忆化某棵子树的最优解, 而不能记忆化如搜索树中部某块局部逻辑.
+比如某条分支路径为"Proj->Sel->Proj->Scan", 通过group, 就可以单独记住中间"Sel->Proj"的最优执行计划.
+当以后在其他分支再遇到相同的逻辑时, 则可以跳过搜索.
 
 Section 4.1 讲搜寻最优解的过程, 主要有这几个阶段:
 1. Exploration: 根据规则扩展group或者group expression, 主要是逻辑上的扩展, 比如InnerJoin(1,2)可扩展为InnerJoin(2,1).

@@ -251,3 +251,50 @@ PS: 下面所说的所有关于时间的比较, 先后, 大小于, 都是以tt�
 第二步保证, 当tt.After(ts)为true后, 一旦事务提交, 它的结果便能对所有节点可见; 因为既然在这台机器上tt.After(ts)为true, 那么在所有简单, tt.After(ts)也一定为true.
 ```
 
+### Online, Asynchronous Schema Change in F1
+```
+Section 2介绍了一些背景
+F1底层为KV存储, F1会把KV转化成关系型的表示.
+具体的存储方式如下:
+设表为t, 有k1, k2两个primary key, a, b两个其他列.
+则存在:
+1. t.k1+t.k2+"exists"构成的key, 其value为null, 表示该行的存在.
+2. t.k1+t.k2+"a"构成的key, 其value为t.a, 存储该行a列的内容.
+3. t.b同上.
+
+Section 3描述了其模型, 是最为核心的章节.
+基本思路为: 作者认为数据库在状态变更时出现不一致的核心原因是变化太快导致的("The fundamental cause of this corruption is that the change made to the schema is, in some sense, too abrupt."), 于是引入了中间状态来解决这个问题.
+
+3.1 节定义了引入的几个状态, absent, delete-only, write-only, public.
+
+3.2 节对文中描述的一致性进行了定义, 简单来说就是不存在以下两种异常:
+1. 多数据: 如某个索引上有某行的数据, 但是在实际的表中, 却没有对应的行.
+2. 缺数据: 某行数据真实存在, 但是在索引上却找不到他对应的记录.
+
+举例说明一个多数据异常发生的情况.
+以添加索引为例, 把schema从S1状态变更为S2, 由于集群状态不同步, 假设机器A处于S1, 机器B处于S2.
+B插入某行, 由于索引在S2上存在(public), 索引B会更新索引, 接着A删除该行, 由于索引在S1不存在(absent), A会留下索引上对应的行数据, 出现多数据异常.
+
+3.3 节介绍了改变schema的过程.
+为了简化, 论文假设任意时刻, 整个集群最多只存在相邻的两种状态的schema.
+同时把schema的变更氛围了optional和required两种模式.
+区别在于optional的索引或列, 允许索引缺行, 或者列为null, 而required则不允许.
+根实质的区别在于在整个schema的变更过程中, 是否会有一个时间段来重组织数据(reorg).
+比如增加一个required索引, 则需要在某个时间段, 把添加索引前的所有数据, 都更新到索引上(backfill).
+
+如果为optional, 则变更过程为:
+absent -> delete-only -> public.
+
+如果为required, 则过程为:
+absent -> delete-only -> write-only -> public
+多出的write-only实际上就是为的reorg阶段服务的.
+
+证明的过程其实也简单, 以optional为例, 只要分别证明:
+1. S1和S2分别在absent, delete-only不会引入异常, 且
+2. S1和S2分别在delete-only, public不会引入异常.
+则可以证明整个变更过程不会引入异常.
+
+4 节介绍了实现上的一些点
+4.2 说到每次变更效率较低(如reorg), 可把多个DDL操作打包一起执行.
+4.3 上述有假设"任意时刻, 整个集群最多存在两种相邻的schema", 这是通过租约实现的, 每台机器定期从一个固定的KV存储里, 获取最新的schema状态.
+```

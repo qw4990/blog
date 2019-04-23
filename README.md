@@ -20,6 +20,8 @@
 
 # database
 
+[my database paper notes](/database/papers/README.md)
+
 [the implemention of boltDB](/database/boltDB/README.md)
 
 [nyadb](https://github.com/qw4990/NYADB2)

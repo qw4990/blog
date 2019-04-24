@@ -298,3 +298,6 @@ absent -> delete-only -> write-only -> public
 4.2 说到每次变更效率较低(如reorg), 可把多个DDL操作打包一起执行.
 4.3 上述有假设"任意时刻, 整个集群最多存在两种相邻的schema", 这是通过租约实现的, 每台机器定期从一个固定的KV存储里, 获取最新的schema状态, 获取失败节点则自杀, 等待外部集群管理系统处理.
 ```
+
+### Cost-Based Query Transformation in Oracle
+详细见[CBQT](./CBQT.md)

@@ -301,3 +301,6 @@ absent -> delete-only -> write-only -> public
 
 ### Cost-Based Query Transformation in Oracle
 详细见[CBQT](./CBQT.md)
+
+### Inside the SQL Server Query Optimizer
+详细见[SQL Server Optimizer](./SQLServerOptimizer.md)

@@ -304,3 +304,124 @@ absent -> delete-only -> write-only -> public
 
 ### Inside the SQL Server Query Optimizer
 详细见[SQL Server Optimizer](./SQLServerOptimizer.md)
+
+### C-Store: A Column-oriented DBMS
+```
+section1交代背景和C-Store基本架构;
+
+总的来说C-Store适合处理大量大查询+小TP写入的场景;
+
+主体分为两个大模块, Writeable Store(WS)和Read-optimized Store(RS);
+
+RS用来支持大数据下的大查询, 列存;
+
+WS假设数据规模远小于RS, 需要较多内存使用, 用来支持小TP写入, 存储格式和RS一样;
+
+后台有Tuple Mover, 会将WS的数据移动到RS.
+
+
+
+section2描述数据模型;
+
+把表按列拆分成多个Projection, 每个Projection包含多个列, 并按照sort key(某一列)有序;
+
+同一个列可能出现在多个Projection内, 也就是数据有冗余;
+
+其他表的列也可能以外键的形式出现在Projection中;
+
+如某个表有(name, age, dept, salary)四个列, 则可能被拆成:
+
+1. (name, age | age);
+2. (dept, age, ForeignKey | ForeignKey);
+3. (name, salary | salary);
+
+竖线后为sort key;
+
+每个Projection会按照sort key, 水平切割成多个segment, 每个segment保存一段区间数据;
+
+
+
+接着引入一个storage key的概念, 其实就是逻辑上的rowID; 
+
+在RS中, storage key不会显示记录, 而是根据偏移量来决定;
+
+为了把多个Projection逻辑上能还原成一个表, 引入join index的概念;
+
+join index也是按Projection的方式进行存储, 包含两列(segmentID, storage key);
+
+
+
+section3介绍了RS;
+
+主要介绍了RS中的4中压缩方式;
+
+用哪种压缩方式, 是根据order key和列基数确定的;
+
+1. self-order, 小基: (v, f, n), v是value, f是v开始的偏移量, n是出现次数;
+2. foreign-order, 小基: (v, b), v是value, b是bitstring, 表示出现在哪些行;
+3. self-order, 大基: 把每个v和前一个v做差, 如(1, 4, 7, 7)会被压缩成(1, 3, 3, 0);
+4. foreign-order, 大基: 不进行压缩;
+
+
+
+section4介绍了WS;
+
+数据模型和RS一样, 也是用RS;
+
+犹豫假设数据量远小于RS, 不会对WS中的数据进行压缩;
+
+且会利用B-tree来维护sort key和storage key;
+
+
+
+section6介绍了更新和事务;
+
+实现了一个简单版的snapshot isolation;
+
+只读事务的时间戳必须要在一个区间[low water mark(LWM), high water mark(HWM)]内, 原因和实现有关;
+
+WS内有insertion vector(IV)和deleted recored vector(DRV), 用来暂存一段时间内的插入和删除操作;
+
+会把整个时间分为多个epoch, 有一个节点被用作timestamp authority(TA), 用来推进epoch;
+
+TA定期的向其他节点发送end of epoch信号, 其他节点等该epoch开始的写入事务结束后, 返回信息;
+
+TA收到所有的回馈信息后, 把epoch推进一个周期, 然后把HWM设置为上一个epoch.
+
+我理解这样做的原因是:
+
+1. C-Store预设场景决定, 大查询+小更新, 这种简单的SI实现已经够用;
+2. 如论文中所说"without requiring a large space budget", 减小空间负担, WS多在内存中;
+
+
+
+section7介绍Tuple Mover;
+
+一个后台任务会寻找worthy segment, 然后更新到RS, 同时更新LWM;
+
+
+
+section8简单介绍了执行器和优化器;
+
+执行器比较有特点的是:
+
+1. Select返回的是bitstring, 而不是直接过滤后的Projection;
+2. 新增Mask算子, 接受bitstring和Projection, 返回对应过滤后的Projection;
+3. 对应的bitstring算子, 直接在bitstring上进行操作;
+
+优化器的主要任务有两个:
+
+1. 决定用哪些projection来产生数据;
+2. 决定什么时候用mask来解开bitstring, 这对效率影响很大, 很多操作and, or, count等可以直接在bitstring上进行;
+
+
+
+section9用TPCH和传统的行存和其他的列存进行了对比;
+
+总结起来速度快的原因又:
+
+1. 列存, 可以避免读取无用的列数据;
+2. 以Projection的方式存储数据, 不同Projection的sort order可以不一样;
+3. 更好的数据压缩方式;
+4. 部分算子操作可以直接在压缩后的数据上进行;
+```

@@ -425,3 +425,118 @@ section9用TPCH和传统的行存和其他的列存进行了对比;
 3. 更好的数据压缩方式;
 4. 部分算子操作可以直接在压缩后的数据上进行;
 ```
+
+
+### Mesa: Geo-Replicated, Near Real-Time, Scalable Data Warehousing
+```
+section1介绍mesa的需要解决的问题和基本思路, 大概如下:
+
+1. storage scalability and availability: 数据水平切分, 然后分组和备份.
+2. consistent and repeatable queries during update: MVCC.
+3. update scalability: batch.
+4. update consistency across multiple data centers: Paxos.
+
+
+
+section2主要介绍了数据模型.
+
+首先把数据维度分为attributes(keys)和measure(values).
+
+每个table的schema包括keys, values和聚合函数F, F必须满足结合律.
+
+一个table可以包含一个或多个index.
+
+更新时会把数据做batch, 然后分配一个version.
+
+定期把数据进行预聚合, 形成的数据组成为delta.
+
+每个delta包含一段version的数据, 表示为[v1, v2]&v1<=v2.
+
+每次更新形成的delta成为singleton, 表示为[v1, v2]&v1=v2.
+
+根据一些压缩策略, 把delta进行合并, 大概会形成:
+
+[0, B], [B+1, v1], [v1, v2]...这样的形式.
+
+
+
+delta是不可修改的, 是逻辑概念, 按照key排序.
+
+存储时水平切割为多个data file, 每个file内再水平切割并组织成多个row block.
+
+每个block会表示内部第一行的first key, block内按列存储, 以提高压缩率.
+
+每个data file都会有一个index file, 包含了data file内每个row block的first key的前缀.
+
+搜索时先在index file上根据前缀二分, 然后再在data file内进行二分找到需要的block.
+
+
+
+section3讲Mesa架构.
+
+大体包含两个子系统, update/maintenance(UMS)和querying(QS).
+
+Mesa的原信息存储依赖BigTable, data file存储依赖Colossus.
+
+
+
+先从单个实例的角度来看.
+
+UMS是一个多worker的框架, 大体为一个Controller管控多个其他worker.
+
+状态都存在BigTable中, 所以UM是无状态的.
+
+QS接受用户请求, 然后从Colossus中读取对应的数据, 计算并返回.
+
+不同请求有不同优先级, 优先级需要用户自己进行标记.
+
+
+
+集群视角来看.
+
+有一个Mesa committer组件, 接管所有更新请求, 他过程如下:
+
+1. batch这些请求;
+2. 申请version并对修改操作的元信息进行广播(如新数据的路径);
+3. 等待一定数量的controller都完成对应广播元信息操作;
+4. 把数据写到colossus;
+5. 更新改表对应的version, 使得对之后的query生效.
+
+这里广播和version管理都是通过另一个组件versions database完成的.
+
+versions database利用Paxos, 可以保持多机房原信息一致性.
+
+这里有个问题是为什么不把元信息的存储从Bigtable整合到versions database内?
+
+目前猜测是元信息并不需要version那么强的一致性, Paxos会让元信息更新变得很慢.
+
+
+
+以集群视角来看.
+
+有一个global locator service组件, mesa client在发起请求前, 会访问他以获得一些query server的信息.
+
+
+
+section4 讲了一些优化.
+
+查询上主要讲了delta prunning, scan-to-seek, resume key.
+
+都是些小tricky, 不细讲了.
+
+
+
+Mesa支持在线的schema修改.
+
+主要有两种方式.
+
+第一种方式简单粗暴, 直接复制老schema数据, 复制完成时, 利用Bigtable提供的atomic操作, 切换到新schema.
+
+缺点是生效速度慢, 切废存储空间.
+
+第二种方式能立即生效, 被称为linked schema change.
+
+方法为特殊处理一些特定的schema变动, 比如添加/删除列, 然后在update的时候直接进行写新schema, query的时候对新老schema的数据进行转换和整合.
+
+缺点是查询时可能慢点, 不过等到老的delta被完全compact到新schema的delta时就好了.
+```

@@ -540,3 +540,44 @@ Mesa支持在线的schema修改.
 
 缺点是查询时可能慢点, 不过等到老的delta被完全compact到新schema的delta时就好了.
 ```
+
+### Everything You Always Wanted to Know About Compiled and Vectorized Queries But Were Afraid to Ask
+```
+目前先看前四章, 直接整个一起说:
+
+传统 Volcano 模型有很大的解释开销, VectorWise 通过:
+1. batch, 每次处理一批数据;
+2. 按列计算, 每批处理同一种类型的数据;
+使得解释的开销被均摊;
+
+除了均摊解释开销, VectorWise 还有个好处是处理数据的 loop 内操作通常很简单;
+
+简单的 loop, 有利于 CPU:
+1. 方便 CPU 做乱序执行;
+2. branch miss 后, 重做的代价较低;
+这俩性质, 在论文中能得到的好处是, 使得 CPU 有更低的内存访问延迟(better latency hiding, Figure 4);
+
+当然 VectorWise 把不同列的处理拆分成了多个 loop, 对比 compile 有两个缺点:
+1. 需要的指令更多;
+2. 需要物化部分中间结果;
+
+compile 方式能把 non-blocking 的操作融合在一起(放在一个 loop 内); 
+
+该方式优点是:
+1. 会有更少的 CPU 指令;
+2. 避免部分中间结果物化的开销;
+
+缺点是 loop 内的操作可能相对复杂, 没有了 VectorWise 上面的两个好处;
+
+上面可见 VectorWise 和 compile 方式本质上的不同在于:
+1. VectorWise 倾向于把操作按列拆开, 每次处理一列, 每个 loop 内操作简单, CPU 亲和性高, 缺点是步骤增加了, 需要更多的指令, 中间结果需要物化;
+2. compile 倾向于把操作融合(fuse)在一起, 每次 loop 尽量把能做的都做了, 减少不必要的指令, 也能提高 cache 命中率, 缺点是 loop 内操作相对复杂, 不方便 CPU 做优化;
+
+compile 适合计算重的query, VectorWise 在 Join 占比大的 query 中表现比 compile 好;
+
+
+文中还介绍了作者的 Vectorized Join/Agg, 不过思路比较 common, 不叙述了;
+
+后面几张在引入 SIMD 和 并发的条件下又做了部分测试, 先不看了;
+
+```

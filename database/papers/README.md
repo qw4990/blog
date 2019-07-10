@@ -581,3 +581,6 @@ compile 适合计算重的query, VectorWise 在 Join 占比大的 query 中表�
 后面几张在引入 SIMD 和 并发的条件下又做了部分测试, 先不看了;
 
 ```
+
+### CockroachDB Vectorized Execution
+详细见[CRDB VEC](../slides/CRDBVectorizedExecution.pdf)

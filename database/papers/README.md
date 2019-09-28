@@ -587,3 +587,9 @@ compile 适合计算重的query, VectorWise 在 Join 占比大的 query 中表�
 
 ### X-Engine: An Optimized Storage Engine for Large-scale E-commerce Transaction Processing
 详细见[X-Engine](../slides/X-ENGINE_ZYJ.pdf)
+
+### Bigtable: A Distributed Storage System for Structured Data
+coming soon
+
+### What's Really New with NewSQL
+coming soon

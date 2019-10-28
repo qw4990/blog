@@ -593,3 +593,7 @@ coming soon
 
 ### What's Really New with NewSQL
 coming soon
+
+### SQL Spider
+根据 TableSchema 和 DatabaseSchema 自动随机在 SQL 空间遍历，生成 SQL，用于测试；
+[SQLSpider](../slides/SQLSpider.pdf)

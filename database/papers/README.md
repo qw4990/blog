@@ -600,3 +600,6 @@ coming soon
 
 ### The Snowflake Elastic Data Warehouse
 coming soon
+
+### WiscKey: Separating Keys from Values in SSD-conscious Storage
+coming soon

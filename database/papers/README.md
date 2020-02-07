@@ -602,7 +602,19 @@ coming soon
 coming soon
 
 ### WiscKey: Separating Keys from Values in SSD-conscious Storage
-coming soon
+```
+少量的更新在 B-trees 中可能引起很多随机写入，所以在 write-intensive 场景的 KV DB 中，基于 LSM-trees 是比较普遍的。
+在传统的 LSM-trees 实现中读写放大是很普遍的问题，比如两层之间的存储倍数是 10，当从上一层 merge 文件到下一层时，最差可以有 10 倍的放大。
+WiscKey 的思想是把 val 从 LSM-trees 中分离出来单独用一种 SSD-Friendly(vLog) 的格式存放，减小 LSM-trees 的放大。
+
+分离后也有一些问题。
+一是 range 访问会被转换成随机 I/O，因为 val 被打散存放了。
+解决办法是 prefetch 和利用 SSD 的性质去并发读取数据。
+另外在做 GC 的时候也尽量把 key 连续的 val 放在一起。
+
+二是 GC 的时候没有 key 信息不方便，于是虽然把 val 剥离出来存在 vLog，但是格式还是 （key, val）的格式存在 vLog 内。
+```
+
 
 ### Incorporating Partitioning and Parallel Plans into the SCOPE Optimizer
 ```

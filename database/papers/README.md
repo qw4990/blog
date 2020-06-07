@@ -617,33 +617,4 @@ WiscKey 的思想是把 val 从 LSM-trees 中分离出来单独用一种 SSD-Fri
 
 
 ### Incorporating Partitioning and Parallel Plans into the SCOPE Optimizer
-```
-很多优化器简单的把并发放到了优化阶段之后，作为一个 postprocessing step，这样得到的计划可能不是全局最优的，因此最好把并发的考虑直接融入进优化器的自然逻内。
-并发操作（Partition，Merge 等）也会有开销，而且每一步操作后一些物理性质（有序性等）可能会改变，因此要想让优化器完善的考虑这些新因素并不是容易的事情。
-本文则是“教会” SCOPE 优化器考虑并发的因素，解决上述问题。
-
-Section 2 并发实际上就是对数据做 exchange，对应的两个物理操作为 partition 和 merge。
-根据输入和输出流关系，把 exchange 划分成了 5 个类型。
-把 partition 分成了 4 种类型。
-把 merge 分成了 4 种类型。
-
-Section 3 在 cascades planner 结构上描述了基本的实现方式，主要对每个得到的部分物理计划，执行三个操作：
-1. 根据父亲需要的性质，推导儿子满足的条件，传递下去并递归优化儿子；
-2. 计算儿子目前所拥有的性质；
-3. 判断全局得到的物理计划，是否满足全局性质；
-
-Section 4 总结了一些性质的规律并给了严格的定义。
-如严格的定义了 grouping 和 sorting 性质等，不展开说了，比较细节。
-
-Section 5 总结了各个性质，在经过 partition 和 merge 后的变化情况，供 Section 3 中的步骤 2 使用。
-
-Seciton 6 总结各个物理算子在 partition 和 non-partition 执行模式下，对输入数据的要求，供 Section 3 的步骤 1 使用。
-比如 Srot(a, b)，在 non-partition 模式执行时，需要要求 input 必须包含 a b 列；
-而在 partition 模式执行时，除了上述要求，还需要要求 a b 列被包含在 partition-by-columns 集合中。
-
-Section 7 总结怎么去判断物理计划是否满足一个全局的性质，供 Section 3 的步骤 3 使用。
-
-Section 8 总结了在性质不满足时需要 enforce 的一些规则。
-
-后面的略过没看了。
-```
+../slides/SCOPEParallelPlans.pdf

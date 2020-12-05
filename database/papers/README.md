@@ -621,3 +621,8 @@ WiscKey 的思想是把 val 从 LSM-trees 中分离出来单独用一种 SSD-Fri
 
 ### How Good Are Query Optimizers, Really?
 ../slides/HowGoodAreQueryOptimizers.pdf
+
+### TiDB: A Raft-based HTAP Database
+coming soon
+
+

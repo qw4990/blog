@@ -17,13 +17,15 @@ key functions:
                   - `ObJoinOrder::add_table(tbl_id, ..., access_paths)`: find all access paths of this table
                     - `get_valid_index_idx(tbl_id, ..., valid_index_ids)`: get all indexes of this table
                     - `fill_index_info_cache(...)`: get all index information by index IDs
+                      - `fill_index_info_entry`
+                        - `get_query_range_info`
                     - `add_table_by_heuristics(...)`: use some heuristics rule to choose an access path
                       - `user_table_heristics`
                     - `pruning_index(...)`: use skyline pruning to prune some unoptimizal indexes
                       - `cal_dimension_info`: calculate skyline pruning dimension
                     - `compute_pruned_index()`: 
                     - `create_access_path`: create corresponding access path for each available index
-                  - `compute_table_location_for_paths`
+                  - `compute_table_location_for_paths`: ???
                   - `estimate_size_and_width_for_access`
                   - `compute_cost_and_prune_access_path`
           - `ObLogPlan::candi_init()`

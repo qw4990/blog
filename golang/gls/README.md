@@ -19,7 +19,7 @@
 
 全称为协程本地存储\(goroutine local storage\);
 
-说通俗一点, 你可以直接是为为每个goroutine绑定了一个map;
+说通俗一点, 你可以直接为每个goroutine绑定了一个map;
 
 在该goroutine的存在时间中, 你可以调用GLS的接口, 向这个map中存入或读取数据;
 

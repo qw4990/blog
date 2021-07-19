@@ -625,4 +625,17 @@ WiscKey 的思想是把 val 从 LSM-trees 中分离出来单独用一种 SSD-Fri
 ### TiDB: A Raft-based HTAP Database
 coming soon
 
+### An Overview of Query Optimization in Relational Systems
+Summary and introduce some foundations and significant work in this area then(1998).
 
+Section 2 introduce the optimizer briefly.
+
+Section 3 introduce System-R optimizer briefly with two important techniques dynamic programming and interesting orders.
+
+Skipped the Section 4.
+
+Section 5 introduce some statistical information on base data like `the number of tuples`, `the number of physical pages`, `histograms`, `the min/max values`, `2-dim histograms` and `the number of distinct pairs of values`. And to obtain these information on large shcemas, sampling data is used in some DBs. Another problem is how to propagate the statistical information through operators.
+
+Section 6 compares two enumeration architectures `Starburst` and `Volcano/Cascades`
+
+Skipped the Section 7.

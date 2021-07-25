@@ -655,3 +655,25 @@ When calculating this correlation, some factors are considered, like pairwise di
 When sampling plans from its plan space, the standard outlier detection algorithm k-medoids is used.
 
 To force optimizers of different DBs to generate different plans, system-specific hints or tunning mechanisms are used.
+
+### Testing SQL Server’s Query Optimizer: Challenges, Techniques and Experiences
+Key Challenges of query optimization:
+1. Large input space and multiple paths: it makes exhaustive testing impossible, and it's difficult to select a representative set of test cases to achieve appropriate coverage;
+2. Optimization time: the tradeoff between optimization time/resources and plan performance is a challenging problem;
+3. Cardinality estimation;
+4. Cost estimation;
+5. "Tow wrongs can make a right" and Overfitting;
+6. Adaptive optimization and self-tuning techniques;
+7. Optimization quality is a problem of statistical nature: different workloads and queries have different requirements to the optimizer;
+
+Testing Techniques:
+Two testing categories:
+1. end-to-end testing: that aim to simulate usage scenarios and verify the end result;
+2. subcomponent testing: that aim to exercise specific subcomponents and code paths;
+
+Some examples of testing techniques:
+1. Correctness testing: the plan should be `correct`, i.e. it can produce correct results; It can be validated by comparing results between different plans/release-versions/databases;
+2. Large-scale stochastic testing: use test/query generators to generate massive sets of test cases; these generators can be random or can be guided towards covering specific areas;
+3. Performance baselines: standard benchmarks like TPCH cover only a small part of SQL Server's functionality and contain very well-behaved data distributions; some benchmarks based on real customer scenarios are used;
+4. Optimization quality scorecards: in addition to query and optimization performance, a variety of metrics are used: the amount of optimization memory, cardinality estimation errors, execution plan size, search space size, and others...
+

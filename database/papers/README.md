@@ -737,3 +737,5 @@ Examples of model variations:
 
 And then through careful combining of model variation on their dataset (in-house cutomer queries + standard benchmarks +  real customer workloads; (30+ different workloads)): the new CE model surpasses the old in most cases.
 
+### Learned Cardinalities: Estimating Correlated Joins with Deep Learning
+TODO

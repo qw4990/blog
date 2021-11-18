@@ -737,6 +737,10 @@ Examples of model variations:
 
 And then through careful combining of model variation on their dataset (in-house cutomer queries + standard benchmarks +  real customer workloads; (30+ different workloads)): the new CE model surpasses the old in most cases.
 
+### Predicting Query Execution Time: Are Optimizer Cost Models Really Unusable?
+
+### Modelling Costs for a MM-DBMS
+
 ### Learned Cardinalities: Estimating Correlated Joins with Deep Learning
 WIP
 

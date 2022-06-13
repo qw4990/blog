@@ -1,3 +1,4 @@
+# https://pytorch.org/tutorials/beginner/basics/optimization_tutorial.html
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
